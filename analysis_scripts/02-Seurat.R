@@ -9,7 +9,7 @@ library(EnhancedVolcano)
 
 
 ### Dataset 1:
-h5_files <- "sample1/outs/filtered_feature_bc_matrix.h5"
+h5_files <- "./count/outs/filtered_feature_bc_matrix.h5"
 h5_read <- Read10X_h5(h5_files)
 h5_seurat <- CreateSeuratObject(h5_read,project="sample1")
 saveRDS(h5_seurat, "h5_seurat.rds", compress = T)
@@ -62,7 +62,7 @@ saveRDS(mydata, "mydata-after_filter.rds", compress = T)
 
 
 ### Dataset 2:
-h5_files <- "sample2/outs/filtered_feature_bc_matrix.h5"
+h5_files <- "./count-2-2/outs/filtered_feature_bc_matrix.h5"
 h5_read <- Read10X_h5(h5_files)
 h5_seurat_2 <- CreateSeuratObject(h5_read,project="sample2")
 saveRDS(h5_seurat_2, "h5_seurat_2.rds", compress = T)
