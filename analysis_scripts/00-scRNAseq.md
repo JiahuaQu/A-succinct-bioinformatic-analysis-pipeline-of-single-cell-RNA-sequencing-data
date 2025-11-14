@@ -37,7 +37,7 @@ for num in $(seq 2 ${total_lines})
 do 
   # Set the environment variable num and submit the job 
   export num 
-  bsub < cellranger_count.sh 
+  bsub < 01-cellranger_count.sh 
 done
 
 # The second dataset
@@ -65,11 +65,12 @@ for num in $(seq 2 ${total_lines})
 do 
   # Set the environment variable num and submit the job 
   export num 
-  bsub < cellranger_count.sh 
+  bsub < 01-cellranger_count.sh 
 done
 
 
 ```
+
 
 
 
