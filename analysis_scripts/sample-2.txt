@@ -1,0 +1,2 @@
+sample	id	path
+10k_Human_PBMC_TotalSeqC_5p_gemx_gex1,10k_Human_PBMC_TotalSeqC_5p_gemx_gex2	sample2	/home/jqu/project/scRNAseq_pipeline/datasets/10k_Human_PBMC_TotalSeqC_5p_gemx_fastqs/gex
