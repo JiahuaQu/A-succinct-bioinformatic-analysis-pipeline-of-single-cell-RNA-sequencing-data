@@ -165,8 +165,7 @@ saveRDS(mydata, "mydata-merge_joinlayers.rds", compress = T)
 ### Downstream
 mydata <- readRDS("mydata-merge_joinlayers.rds")
 
-n.genes <- nrow(mydata)
-feature.genes <- rownames(mydata)
+n.genes <- nrow(mydata)   # Or select fewer genes, such as 2,000 by default, to speed up processing.
 
 mydata <- NormalizeData(object = mydata,normalization.method = "LogNormalize",scale.factor = 10000,margin = 1, verbose = FALSE)
 mydata <- FindVariableFeatures(object = mydata, selection.method = "vst", nfeatures = n.genes)
