@@ -1,3 +1,31 @@
+### Install R packages
+# https://cran.r-project.org/web/packages/clustree/readme/README.html
+install.packages("clustree")
+
+# https://github.com/GuangchuangYu/ggplotify
+install.packages("ggplotify")
+
+# https://github.com/Rdatatable/data.table
+install.packages("data.table")
+
+# https://cran.r-project.org/web/packages/tidyverse/readme/README.html
+install.packages("tidyverse")
+
+# https://satijalab.org/seurat/articles/install_v5
+install.packages("Seurat")
+
+# https://github.com/hhoeflin/hdf5r
+install.packages("hdf5r")
+
+# https://cran.r-project.org/web/packages/harmony/vignettes/quickstart.html
+install.packages('harmony')
+
+# https://github.com/kevinblighe/EnhancedVolcano
+if (!requireNamespace('BiocManager', quietly = TRUE))
+  install.packages('BiocManager')
+BiocManager::install('EnhancedVolcano')
+
+### Load in packages
 library(clustree)
 library(ggplotify)
 library(data.table)
@@ -12,15 +40,16 @@ library(EnhancedVolcano)
 h5_files <- "./count/outs/filtered_feature_bc_matrix.h5"
 h5_read <- Read10X_h5(h5_files)
 h5_seurat <- CreateSeuratObject(h5_read,project="sample1")
-saveRDS(h5_seurat, "h5_seurat.rds", compress = T)
+saveRDS(h5_seurat, "h5_seurat.rds")
 
 mydata <- readRDS("h5_seurat.rds")
+#mydata <- reaRDS("../R/h5_seurat.rds")
 
 # Percentage of mitochondrial genes
 mydata <- PercentageFeatureSet(mydata, pattern = "^MT-", col.name = "percent_mito",assay = "RNA")
 # Percentage of ribosomal genes
 mydata <- PercentageFeatureSet(mydata, pattern = "^RP[SL]", col.name = "percent_ribo",assay = "RNA")
-saveRDS(mydata, "mydata-before_filter.rds", compress = T)
+saveRDS(mydata, "mydata-before_filter.rds")
 
 feats1 <- c("nFeature_RNA", "nCount_RNA")
 feats2 <- c("percent_mito", "percent_ribo")
@@ -33,22 +62,47 @@ Vlnplot2 <- VlnPlot(mydata, group.by = "orig.ident", features = feats2, pt.size 
 ggsave(filename="Vlnplot2.pdf",plot=Vlnplot2, width=5, height = 5)
 ggsave(filename="Vlnplot2.png",plot=Vlnplot2, width=5, height = 5, units = "in", dpi = 300)
 
-
 qc_cutoffs <- list(
-  nCount_RNA   = quantile(mydata$nCount_RNA,   probs = c(0.10, 0.90)),
-  nFeature_RNA = quantile(mydata$nFeature_RNA, probs = c(0.10, 0.90)),
-  percent_mito = quantile(mydata$percent_mito, probs = 0.90),  # only upper cutoff
-  percent_ribo = quantile(mydata$percent_ribo, probs = 0.90)   # only upper cutoff
+  nCount_RNA   = quantile(mydata$nCount_RNA,   probs = c(0.01, 0.99)),
+  nFeature_RNA = quantile(mydata$nFeature_RNA, probs = c(0.01, 0.99)),
+  percent_mito = quantile(mydata$percent_mito, probs = 0.99),  # only upper cutoff
+  percent_ribo = quantile(mydata$percent_ribo, probs = 0.99)   # only upper cutoff
 )
 
 qc_cutoffs
+# $nCount_RNA
+# 1%      99% 
+#   670.58 33033.83 
+# 
+# $nFeature_RNA
+# 1%     99% 
+#   31.29 6151.65 
+# 
+# $percent_mito
+# 99% 
+# 97.10126 
+# 
+# $percent_ribo
+# 99% 
+# 35.21121 
 
-mydata <- subset(mydata, subset = nCount_RNA >= 4417.9  & 
-                   nCount_RNA <= 20937.6  &
-                   nFeature_RNA >= 1956.0  & 
-                   nFeature_RNA <= 5014.4  &
-                   percent_mito <= 11.18076  & 
-                   percent_ribo <= 29.44844)
+q1 <- unname(qc_cutoffs$nCount_RNA[1]);   q2 <- unname(qc_cutoffs$nCount_RNA[2])
+q3 <- unname(qc_cutoffs$nFeature_RNA[1]); q4 <- unname(qc_cutoffs$nFeature_RNA[2])
+
+q5 <- min(as.numeric(qc_cutoffs$percent_mito), 10)
+q6 <- min(as.numeric(qc_cutoffs$percent_ribo), 30)
+
+# Filter
+mydata <- subset(
+  mydata,
+  subset =
+    nCount_RNA   >= q1 &
+    nCount_RNA   <= q2 &
+    nFeature_RNA >= q3 &
+    nFeature_RNA <= q4 &
+    percent_mito <= q5 &
+    percent_ribo <= q6
+)
 
 Vlnplot3 <- VlnPlot(mydata, group.by = "orig.ident", features = feats1, pt.size = 0.000001, ncol = 2) 
 ggsave(filename="Vlnplot3.pdf",plot=Vlnplot3, width=5, height = 5)
@@ -58,23 +112,26 @@ Vlnplot4 <- VlnPlot(mydata, group.by = "orig.ident", features = feats2, pt.size 
 ggsave(filename="Vlnplot4.pdf",plot=Vlnplot4, width=5, height = 5)
 ggsave(filename="Vlnplot4.png",plot=Vlnplot4, width=5, height = 5, units = "in", dpi = 300)
 
-saveRDS(mydata, "mydata-after_filter.rds", compress = T)
+saveRDS(mydata, "mydata-after_filter.rds")
 
 
 ### Dataset 2:
 h5_files <- "./count-2-2/outs/filtered_feature_bc_matrix.h5"
 h5_read <- Read10X_h5(h5_files)
 h5_seurat_2 <- CreateSeuratObject(h5_read,project="sample2")
-saveRDS(h5_seurat_2, "h5_seurat_2.rds", compress = T)
+saveRDS(h5_seurat_2, "h5_seurat_2.rds")
 
 # Filter
 mydata <- h5_seurat_2
 rm(h5_seurat_2)
+
+#mydata <- readRDS("../R-2/h5_seurat_2.rds")
+
 # Percentage of mitochondrial genes
 mydata <- PercentageFeatureSet(mydata, pattern = "^MT-", col.name = "percent_mito",assay = "RNA")
 # Percentage of ribosomal genes
 mydata <- PercentageFeatureSet(mydata, pattern = "^RP[SL]", col.name = "percent_ribo",assay = "RNA")
-saveRDS(mydata, "mydata-before_filter.rds", compress = T)
+saveRDS(mydata, "mydata-before_filter_2.rds")
 
 feats1 <- c("nFeature_RNA", "nCount_RNA")
 feats2 <- c("percent_mito", "percent_ribo")
@@ -87,20 +144,38 @@ Vlnplot6 <- VlnPlot(mydata, group.by = "orig.ident", features = feats2, pt.size 
 ggsave(filename="Vlnplot6.pdf",plot=Vlnplot6, width=5, height = 5)
 ggsave(filename="Vlnplot6.png",plot=Vlnplot6, width=5, height = 5, units = "in", dpi = 300)
 
-# QC thresholds (1%–99% for counts/features; 99% for mito/ribo capped)
-q_nCount_RNA   <- quantile(mydata$nCount_RNA,   probs = c(0.1, 0.9), na.rm = TRUE)
-q_nFeature_RNA <- quantile(mydata$nFeature_RNA, probs = c(0.1, 0.9), na.rm = TRUE)
-q_percent_mito <- quantile(mydata$percent_mito, probs = 0.9,          na.rm = TRUE)
-q_percent_ribo <- quantile(mydata$percent_ribo, probs = 0.9,          na.rm = TRUE)
+qc_cutoffs <- list(
+  nCount_RNA   = quantile(mydata$nCount_RNA,   probs = c(0.01, 0.99)),
+  nFeature_RNA = quantile(mydata$nFeature_RNA, probs = c(0.01, 0.99)),
+  percent_mito = quantile(mydata$percent_mito, probs = 0.99),  # only upper cutoff
+  percent_ribo = quantile(mydata$percent_ribo, probs = 0.99)   # only upper cutoff
+)
 
-q1 <- unname(q_nCount_RNA[1]);   q2 <- unname(q_nCount_RNA[2])
-q3 <- unname(q_nFeature_RNA[1]); q4 <- unname(q_nFeature_RNA[2])
-  
-q5 <- min(as.numeric(q_percent_mito), 10)
-q6 <- min(as.numeric(q_percent_ribo), 40)
-  
+qc_cutoffs
+# $nCount_RNA
+# 1%      99% 
+#   907.14 66181.52 
+# 
+# $nFeature_RNA
+# 1%     99% 
+#   400.28 7919.59 
+# 
+# $percent_mito
+# 99% 
+# 35.44623 
+# 
+# $percent_ribo
+# 99% 
+# 42.73233 
+
+q1 <- unname(qc_cutoffs$nCount_RNA[1]);   q2 <- unname(qc_cutoffs$nCount_RNA[2])
+q3 <- unname(qc_cutoffs$nFeature_RNA[1]); q4 <- unname(qc_cutoffs$nFeature_RNA[2])
+
+q5 <- min(as.numeric(qc_cutoffs$percent_mito), 10)
+q6 <- min(as.numeric(qc_cutoffs$percent_ribo), 30)
+
 # Filter
-mydata_filt <- subset(
+mydata <- subset(
   mydata,
   subset =
     nCount_RNA   >= q1 &
@@ -119,7 +194,7 @@ Vlnplot8 <- VlnPlot(mydata, group.by = "orig.ident", features = feats2, pt.size 
 ggsave(filename="Vlnplot8.pdf",plot=Vlnplot8, width=5, height = 5)
 ggsave(filename="Vlnplot8.png",plot=Vlnplot8, width=5, height = 5, units = "in", dpi = 300)
 
-saveRDS(mydata, "mydata-after_filter_2.rds", compress = T)
+saveRDS(mydata, "mydata-after_filter_2.rds")
 #mydata_2 <- mydata
 
 ### Merge
@@ -137,10 +212,12 @@ merged <- merge(
 
 # Update orig.ident
 unique(merged@meta.data$orig.ident)
-saveRDS(merged, "mydata_merge.rds", compress = T)
+saveRDS(merged, "mydata_merge.rds")
 
 
 ### Join layers
+# mydata <- merged
+# rm(merged)
 mydata <- readRDS("mydata_merge.rds")
 
 Layers(mydata[["RNA"]])
@@ -152,17 +229,15 @@ mydata[["RNA"]] <- JoinLayers(mydata[["RNA"]])
 Layers(mydata[["RNA"]])
 # "counts"
 
-saveRDS(mydata, "mydata-merge_joinlayers.rds", compress = T)
+saveRDS(mydata, "mydata-merge_joinlayers.rds")
 
 
 ### Downstream
 mydata <- readRDS("mydata-merge_joinlayers.rds")
 
-n.genes <- nrow(mydata)   # Or select fewer genes, such as 2,000 by default, to speed up processing.
-
 mydata <- NormalizeData(object = mydata,normalization.method = "LogNormalize",scale.factor = 10000,margin = 1, verbose = FALSE)
-mydata <- FindVariableFeatures(object = mydata, selection.method = "vst", nfeatures = n.genes)
-mydata <- ScaleData(object = mydata, features = feature.genes)
+mydata <- FindVariableFeatures(object = mydata, selection.method = "vst")
+mydata <- ScaleData(object = mydata)
 mydata <- RunPCA(object = mydata, verbose = FALSE)
 p1 <- ElbowPlot(object = mydata, ndims = 50,reduction="pca") 
 ggsave(filename="ElbowPlot.pdf",plot=p1, width=5, height = 5)
@@ -171,12 +246,10 @@ p2 <- DimPlot(object = mydata, reduction = "pca", group.by="orig.ident")
 ggsave(filename="PCA_by_orig.ident.pdf",plot=p2, width=5, height = 5)
 ggsave(filename="PCA_by_orig.ident.png",plot=p2, width=5, height = 5, units = "in", dpi = 300)
 
-saveRDS(mydata, "mydata-processed_after_pca.rds", compress = T)
+saveRDS(mydata, "mydata-processed_after_pca.rds")
 
-
-###
-mydata <- readRDS("mydata-processed_after_pca.rds")
 ### Harmony
+mydata <- readRDS("mydata-processed_after_pca.rds")
 library(harmony)
 mydata <- RunHarmony(object = mydata, group.by.vars = "orig.ident", reduction = "pca",reduction.save = "harmony")
 
@@ -187,19 +260,19 @@ p4 <- DimPlot(object = mydata, reduction = "harmony", group.by="orig.ident")
 ggsave(filename="PCA_by_orig.ident-harmony.pdf",plot=p4, width=5, height = 5)
 ggsave(filename="PCA_by_orig.ident-harmony.png",plot=p4, width=5, height = 5, units = "in", dpi = 300)
 
-saveRDS(mydata, "mydata-processed_after_pca-harmony.rds", compress = T)
+saveRDS(mydata, "mydata-processed_after_pca-harmony.rds")
 
 
 ###
 mydata <- readRDS("mydata-processed_after_pca-harmony.rds")
 
-harmony_dim <- 1:15
+harmony_dim <- 1:20
 
 mydata <- RunUMAP(mydata, reduction = "harmony", dims = harmony_dim)
 
 mydata <- RunTSNE(mydata, reduction = "harmony", dims = harmony_dim)
 
-saveRDS(mydata, "mydata-processed_after_pca-harmony_UMAP_tSNE.rds", compress = T)
+saveRDS(mydata, "mydata-processed_after_pca-harmony_UMAP_tSNE.rds")
 
 
 ### clustering
@@ -210,26 +283,34 @@ mydata <- FindNeighbors(object = mydata, reduction = "harmony", dims = harmony_d
 res <- seq(0.1, 1, 0.1)
 mydata <- FindClusters(object = mydata, resolution = res, verbose = FALSE)
 
+# Loop through each resolution and set factor levels
+for (r in res) {
+  colname <- paste0("RNA_snn_res.", r)
+  if (colname %in% colnames(mydata@meta.data)) {
+    vals <- mydata[[colname]][, 1]
+    levs <- 0:(NROW(unique(vals))-1)
+    mydata[[colname]] <- factor(vals, levels = levs)
+  }
+}
+
 p5 <- clustree(mydata)
 p5 <- as.ggplot(p5)
-ggsave(filename="clustree.pdf",plot=p5, width=5, height = 6)
-ggsave(filename="clustree.png",plot=p5, width=5, height = 6, units = "in", dpi = 300)
+ggsave(filename="clustree.pdf",plot=p5, width=6, height = 8)
+ggsave(filename="clustree.png",plot=p5, width=6, height = 8, units = "in", dpi = 300)
 
 # save after clustering
-saveRDS(mydata, "mydata-processed_after_clustering.rds", compress = T)
+saveRDS(mydata, "mydata-processed_after_clustering.rds")
 
 
-##
-mydata <- readRDS("mydata-processed_after_clustering.rds")
 ### Each resolution
+mydata <- readRDS("mydata-processed_after_clustering.rds")
+
 subDir <- "resolution/"
 if (!file.exists(subDir)){
   dir.create(subDir)
 } 
 
-colnames(mydata@meta.data)
-res <- seq(0.1, 1, 0.1)
-
+# res <- seq(0.1, 1, 0.1)
 for (i in res) {
   ### Plot and color clusters in UMAP
   group_i <- paste0("RNA_snn_res.", i)
@@ -259,15 +340,12 @@ for (i in res) {
   ggsave(filename=paste0(subDir,group_i,'-heatmap.top5.png'), plot=p8, width = 10, height = height_i, units = "in", dpi = 300)
 }
 
-### Select resolution = 0.1
-##
+### Select resolution = 0.2 as an example for downstream analysis
 mydata <- readRDS("mydata-processed_after_clustering.rds")
 
-group_i <- "RNA_snn_res.0.1"
-unique(mydata@meta.data$RNA_snn_res.0.1)
-mydata@meta.data$RNA_snn_res.0.1 <- factor(mydata@meta.data$RNA_snn_res.0.1,levels=0:8)
+group_i <- "RNA_snn_res.0.2"
 
-markers.top5 <- fread("resolution/RNA_snn_res.0.1-markers.top5.csv")
+markers.top5 <- fread("resolution/RNA_snn_res.0.2-markers.top5.csv")
 features.top5 <- markers.top5$gene
 NROW(unique(features.top5))   # 45
 example_9 <- features.top5[c(1,6,11,16,21,26,31,36,41)]
@@ -277,7 +355,7 @@ example_9
 
 
 ### Plots
-Res <- "res.0.1/"
+Res <- "res.0.2/"
 if (!file.exists(Res)){
   dir.create(Res)
 }
@@ -360,7 +438,7 @@ mydata@meta.data$celltype <- factor(mydata@meta.data$celltype,
                                              "cluster6","cluster7","cluster8"))  
 head(mydata@meta.data$celltype)
 
-saveRDS(mydata, "mydata-processed_after_score_celltype.rds", compress = T)
+saveRDS(mydata, "mydata-processed_after_score_celltype.rds")
 
 
 ### DEG between two cell types or among all cell types
@@ -378,12 +456,9 @@ DEG <- FindMarkers(
 head(DEG,2)
 DEG$gene <- rownames(DEG)
 fwrite(DEG, paste0(Res,'DEG-cluster0_cluster1.csv'))
-saveRDS(DEG, paste0(Res,'DEG-cluster0_cluster1.rds'), compress=T)
+saveRDS(DEG, paste0(Res,'DEG-cluster0_cluster1.rds'))
 
-# Volcano plot
-#BiocManager::install("EnhancedVolcano")
-library(EnhancedVolcano)
-
+### Volcano plot
 p13 <- EnhancedVolcano(
   DEG,
   lab = NA,
@@ -425,7 +500,7 @@ ggsave(filename=paste0(Res,"volcano-cluster0_cluster1.pdf"),plot=p14, width=8, h
 ggsave(filename=paste0(Res,"volcano-cluster0_cluster1.png"),plot=p14, width=8, height = 5, units = "in", dpi = 300)
 
 
-# Export the package information 
+### Export the package information 
 sink("sessionInfo.txt")
 sessionInfo()
 sink()
