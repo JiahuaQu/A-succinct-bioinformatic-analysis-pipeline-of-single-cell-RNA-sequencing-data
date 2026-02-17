@@ -87,36 +87,29 @@ Vlnplot6 <- VlnPlot(mydata, group.by = "orig.ident", features = feats2, pt.size 
 ggsave(filename="Vlnplot6.pdf",plot=Vlnplot6, width=5, height = 5)
 ggsave(filename="Vlnplot6.png",plot=Vlnplot6, width=5, height = 5, units = "in", dpi = 300)
 
-qc_cutoffs <- list(
-  nCount_RNA   = quantile(mydata$nCount_RNA,   probs = c(0.10, 0.90)),
-  nFeature_RNA = quantile(mydata$nFeature_RNA, probs = c(0.10, 0.90)),
-  percent_mito = quantile(mydata$percent_mito, probs = 0.90),  # only upper cutoff
-  percent_ribo = quantile(mydata$percent_ribo, probs = 0.90)   # only upper cutoff
+# QC thresholds (1%–99% for counts/features; 99% for mito/ribo capped)
+q_nCount_RNA   <- quantile(mydata$nCount_RNA,   probs = c(0.1, 0.9), na.rm = TRUE)
+q_nFeature_RNA <- quantile(mydata$nFeature_RNA, probs = c(0.1, 0.9), na.rm = TRUE)
+q_percent_mito <- quantile(mydata$percent_mito, probs = 0.9,          na.rm = TRUE)
+q_percent_ribo <- quantile(mydata$percent_ribo, probs = 0.9,          na.rm = TRUE)
+
+q1 <- unname(q_nCount_RNA[1]);   q2 <- unname(q_nCount_RNA[2])
+q3 <- unname(q_nFeature_RNA[1]); q4 <- unname(q_nFeature_RNA[2])
+  
+q5 <- min(as.numeric(q_percent_mito), 10)
+q6 <- min(as.numeric(q_percent_ribo), 40)
+  
+# Filter
+mydata_filt <- subset(
+  mydata,
+  subset =
+    nCount_RNA   >= q1 &
+    nCount_RNA   <= q2 &
+    nFeature_RNA >= q3 &
+    nFeature_RNA <= q4 &
+    percent_mito <= q5 &
+    percent_ribo <= q6
 )
-
-qc_cutoffs
-# $nCount_RNA
-# 10%     90% 
-#   7529.0 32994.6 
-# 
-# $nFeature_RNA
-# 10%    90% 
-#   2543.7 5935.0 
-# 
-# $percent_mito
-# 90% 
-# 4.363675 
-# 
-# $percent_ribo
-# 90% 
-# 38.06148 
-
-mydata <- subset(mydata, subset = nCount_RNA >= 7529  & 
-                   nCount_RNA <= 32994.6  &
-                   nFeature_RNA >= 2543.7  & 
-                   nFeature_RNA <= 5935.0  &
-                   percent_mito <= 4.363675  & 
-                   percent_ribo <= 38.06148)
 
 Vlnplot7 <- VlnPlot(mydata, group.by = "orig.ident", features = feats1, pt.size = 0.000001, ncol = 2) 
 ggsave(filename="Vlnplot7.pdf",plot=Vlnplot7, width=5, height = 5)
