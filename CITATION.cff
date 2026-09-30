@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use or adapt this workflow, please cite this repository and the underlying software tools used in your analysis."
+title: "A succinct single-cell RNA-seq analysis workflow with Cell Ranger, Seurat, and Harmony"
+type: software
+authors:
+  - family-names: "Qu"
+    given-names: "Jia-Hua (George)"
+version: 1.0.0
+date-released: 2026-09-30
+repository-code: "https://github.com/JiahuaQu/A-succinct-bioinformatic-analysis-pipeline-of-single-cell-RNA-sequencing-data"
+keywords:
+  - single-cell RNA sequencing
+  - scRNA-seq
+  - Seurat
+  - Harmony
+  - Cell Ranger
+  - bioinformatics
