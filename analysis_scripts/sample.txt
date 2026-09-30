@@ -1,2 +1,0 @@
-sample	id	path
-pbmc_1k_v3	sample1	/home/jqu/project/scRNAseq_pipeline/datasets/pbmc_1k_v3_fastqs
